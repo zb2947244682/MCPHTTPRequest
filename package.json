@@ -1,6 +1,6 @@
 {
   "name": "@zb2947244682/mcp-http-request",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "description": "MCP tool to simulate HTTP requests",
   "main": "index.js",
   "type": "module",
@@ -21,7 +21,7 @@
     "request",
     "fetch"
   ],
-  "author": "Your Name",
+  "author": "简单生活",
   "license": "ISC",
   "dependencies": {
     "node-fetch": "^3.0.0",

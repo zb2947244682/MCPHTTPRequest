@@ -19,7 +19,7 @@
 ```json
 {
   // ... 其他现有配置 ...
-  "http-request-mcp": {
+  "mcp-http-request": {
     "command": "npx",
     "args": [
       "-y",
