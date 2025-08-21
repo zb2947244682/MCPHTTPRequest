@@ -1,5 +1,5 @@
 {
-  "name": "mcp-http-request",
+  "name": "@zb2947244682/mcp-http-request",
   "version": "1.0.0",
   "description": "MCP tool to simulate HTTP requests",
   "main": "index.js",
