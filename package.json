@@ -1,0 +1,23 @@
+{
+  "name": "mcp-http-request",
+  "version": "1.0.0",
+  "description": "MCP tool to simulate HTTP requests",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "MCP",
+    "HTTP",
+    "request",
+    "fetch"
+  ],
+  "author": "Your Name",
+  "license": "ISC",
+  "dependencies": {
+    "node-fetch": "^3.0.0",
+    "@modelcontextprotocol/sdk": "^1.17.3",
+    "zod": "^3.23.8"
+  }
+}
