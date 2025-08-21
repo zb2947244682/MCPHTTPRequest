@@ -1,52 +1,30 @@
 # MCP HTTP 请求工具
 
-这是一个 MCP (Model Context Protocol) 工具，用于执行可定制参数的 HTTP 请求。
+## 项目介绍
 
-## 功能特点
+这是一个简单的 MCP (Model Context Protocol) 工具，用于执行可定制参数的 HTTP 请求。它旨在提供一个灵活的方式来模拟各种 HTTP 通信，包括自定义请求头和请求体，并自动解析 JSON 响应。
 
-- 支持多种 HTTP 方法（GET、POST、PUT、DELETE、PATCH、HEAD）。
-- 允许自定义请求头。
-- 支持适用于 POST、PUT 和 PATCH 方法的请求体。
-- 自动解析 JSON 响应。
+**NPM 仓库地址:** `https://www.npmjs.com/package/@zb2947244682/mcp-http-request`
 
-## 使用方法
+## 项目功能
 
-此工具可在 MCP 环境中使用，用于模拟 HTTP 请求，以便进行测试、数据获取或集成。
+此 MCP 服务提供了以下 HTTP 请求工具：
 
-### 参数：
+- `httpRequest`: 执行 HTTP 请求，支持以下参数：`url` (字符串，必填), `method` (选项，必填，可选值包括 GET, POST, PUT, DELETE, PATCH, HEAD), `headers` (JSON 字符串，可选，默认为`{}`), `body` (字符串，可选，适用于 POST, PUT, PATCH 方法，默认为`""`)。例如：`{"tool": "httpRequest", "parameters": {"url": "https://api.example.com/data", "method": "POST", "headers": "{\"Content-Type\": \"application/json\", \"Authorization\": \"Bearer YOUR_TOKEN\"}", "body": "{\"key\": \"value\"}"}}`
 
-- `url` (字符串，必填): 发送请求的 URL。
-- `method` (选项，必填): 要使用的 HTTP 方法 (GET, POST, PUT, DELETE, PATCH, HEAD)。
-- `headers` (JSON，可选): 表示请求头的 JSON 对象。默认值: `{}`。
-- `body` (字符串，可选): 请求体（适用于 POST、PUT 和 PATCH 方法）。默认值: `""`。
+## 如何配置到 Cursor 中
 
-### 示例（MCP 环境中）：
+将以下配置添加到您的 Cursor `mcp.json` 文件中：
 
 ```json
 {
-  "tool": "httpRequest",
-  "parameters": {
-    "url": "https://api.example.com/data",
-    "method": "POST",
-    "headers": "{\"Content-Type\": \"application/json\", \"Authorization\": \"Bearer YOUR_TOKEN\"}",
-    "body": "{\"key\": \"value\"}"
+  // ... 其他现有配置 ...
+  "http-request-mcp": {
+    "command": "npx",
+    "args": [
+      "-y",
+      "@zb2947244682/mcp-http-request"
+    ]
   }
 }
 ```
-
-## 本地开发
-
-要在本地运行此工具：
-
-1.  导航到 `MCPHTTPRequest` 目录。
-2.  安装依赖项：
-
-    ```bash
-    npm install
-    ```
-
-3.  然后您可以使用 MCP 客户端或通过直接调用 `index.js` 中的 `run` 函数（仅用于开发目的）来测试该工具。
-
-## 贡献
-
-欢迎通过提交问题或拉取请求来为此项目做出贡献。
