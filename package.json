@@ -1,9 +1,17 @@
 {
   "name": "@zb2947244682/mcp-http-request",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "MCP tool to simulate HTTP requests",
   "main": "index.js",
   "type": "module",
+  "bin": {
+    "mcp-http-request": "./index.js"
+  },
+  "files": [
+    "index.js",
+    "README.md",
+    "PUBLISHING.md"
+  ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
