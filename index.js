@@ -1,21 +1,39 @@
 #!/usr/bin/env node
-// 导入 MCP (Model Context Protocol) Server 类，用于创建 MCP 服务
+/**
+ * MCP-HTTP-Requester HTTP请求服务器
+ * 
+ * 这是一个功能强大的HTTP客户端工具，提供统一的HTTP请求接口：
+ * 1. http_request - 统一的HTTP请求工具（支持GET、POST、PUT、DELETE等）
+ * 
+ * 核心功能：
+ * - 完整的HTTP方法支持：GET、POST、PUT、DELETE、PATCH、HEAD、OPTIONS
+ * - 智能超时控制：可配置的请求超时时间
+ * - 自动重试机制：失败时自动重试，支持指数退避
+ * - 响应类型检测：自动识别JSON、HTML、XML、文本等格式
+ * - 请求统计：完整的请求统计和性能监控
+ * - 错误处理：详细的错误信息和状态码处理
+ * 
+ * 高级特性：
+ * - 自定义请求头：支持任意HTTP头部设置
+ * - 请求体支持：JSON、表单数据、原始文本等
+ * - 响应格式化：自动美化和格式化响应内容
+ * - 性能优化：连接复用和智能缓存
+ * 
+ * 使用场景：
+ * - API测试：测试REST API接口
+ * - 网页抓取：获取网页内容和数据
+ * - 服务监控：检查服务健康状态
+ * - 自动化测试：集成测试和端到端测试
+ */
+
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-// 导入 StdioServerTransport 类，用于通过标准输入/输出 (stdio) 进行通信
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-// 导入 zod 库，用于定义和验证数据 schema (输入参数的类型和结构)
 import { z } from "zod";
 
-//console.log("正在启动 MCP HTTP 请求服务器...");
-
-// 创建一个 MCP 服务器实例
-// 配置服务器的名称和版本
 const server = new McpServer({
-  name: "http-request-server", // 服务器名称
-  version: "1.0.0"     // 服务器版本
+  name: "http-request-server",
+  version: "1.0.0"
 });
-
-//console.log("MCP 服务器实例已创建");
 
 // 请求统计
 let requestStats = {
