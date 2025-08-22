@@ -9,7 +9,7 @@
   "main": "index.js",
   "type": "module",
   "bin": {
-    "mcp-http-request": "./index.js"
+    "mcp-http-requester": "./index.js"
   },
   "files": [
     "index.js",
