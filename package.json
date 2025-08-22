@@ -1,6 +1,6 @@
 {
   "name": "@zb2947244682/mcp-http-requester",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "description": "MCP tool to simulate HTTP requests",
   "repository": {
     "type": "git",
