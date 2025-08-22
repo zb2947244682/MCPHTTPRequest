@@ -1,7 +1,11 @@
 {
-  "name": "@zb2947244682/mcp-http-request",
-  "version": "1.0.4",
+  "name": "@zb2947244682/mcp-http-requester",
+  "version": "1.0.0",
   "description": "MCP tool to simulate HTTP requests",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zb2947244682/MCPHTTPRequester"
+  },
   "main": "index.js",
   "type": "module",
   "bin": {
