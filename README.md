@@ -63,6 +63,19 @@
 npx @zb2947244682/mcp-http-requester
 ```
 
+## 本地开发配置
+
+如果您在本地开发环境中使用，可以将以下配置添加到您的 Cursor `mcp.json` 文件中：
+
+```json
+{
+  "mcp-http-requester": {
+    "command": "node",
+    "args": ["D:\\Codes\\MCPRepo\\mcp-http-requester\\index.js"]
+  }
+}
+```
+
 ## 📋 支持的方法
 
 - **GET** - 获取资源
