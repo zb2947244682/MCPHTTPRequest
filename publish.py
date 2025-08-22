@@ -71,6 +71,54 @@ def update_version(current_version, release_type):
     return '.'.join(map(str, version_parts))
 
 
+def run_git_commit(version, release_name):
+    """执行 Git 提交操作"""
+    try:
+        print("📝 正在提交到 Git 仓库...")
+        
+        # Git 添加 package.json
+        result_add = subprocess.run([
+            'git', 'add', 'package.json'
+        ], capture_output=True, text=True, encoding='utf-8')
+        
+        if result_add.returncode != 0:
+            print("❌ Git add 失败！")
+            if result_add.stderr:
+                print(f"错误信息：{result_add.stderr}")
+            return False
+        
+        # Git 提交
+        commit_message = f"🚀 发布版本 v{version} ({release_name})"
+        result_commit = subprocess.run([
+            'git', 'commit', '-m', commit_message
+        ], capture_output=True, text=True, encoding='utf-8')
+        
+        if result_commit.returncode != 0:
+            print("❌ Git commit 失败！")
+            if result_commit.stderr:
+                print(f"错误信息：{result_commit.stderr}")
+            return False
+        
+        # Git 推送到远程仓库
+        result_push = subprocess.run([
+            'git', 'push'
+        ], capture_output=True, text=True, encoding='utf-8')
+        
+        if result_push.returncode != 0:
+            print("❌ Git push 失败！")
+            if result_push.stderr:
+                print(f"错误信息：{result_push.stderr}")
+            return False
+        
+        print("✅ 已成功提交并推送到远程仓库！")
+        print(f"📝 提交信息：{commit_message}")
+        return True
+        
+    except Exception as e:
+        print(f"❌ Git 操作过程中出现错误：{e}")
+        return False
+
+
 def run_npm_publish():
     """执行 npm publish 命令"""
     try:
@@ -165,16 +213,26 @@ def main():
     print(f"✅ 版本号已从 {current_version} 更新为 {new_version} ({release_name})")
     
     # 直接发布到 npm
-    success = run_npm_publish()
+    npm_success = run_npm_publish()
+    
+    # 如果 npm 发布成功，则提交到 Git
+    git_success = False
+    if npm_success:
+        git_success = run_git_commit(new_version, release_name)
     
     print()
     print("=" * 50)
-    if success:
-        print("          ✅ 发布完成！")
+    if npm_success:
+        print("          ✅ npm 发布成功！")
         print(f"发布类型：{release_name}")
         print(f"新版本：{new_version}")
+        
+        if git_success:
+            print("          ✅ Git 提交成功！")
+        else:
+            print("          ⚠️  Git 提交失败（但 npm 发布已完成）")
     else:
-        print("          ❌ 发布失败！")
+        print("          ❌ npm 发布失败！")
     print("=" * 50)
 
 
