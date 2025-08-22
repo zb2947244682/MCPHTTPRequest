@@ -4,7 +4,7 @@
 
 这是一个简单的 MCP (Model Context Protocol) 工具，用于执行可定制参数的 HTTP 请求。它旨在提供一个灵活的方式来模拟各种 HTTP 通信，包括自定义请求头和请求体，并自动解析 JSON 响应。
 
-**NPM 仓库地址:** `https://www.npmjs.com/package/@zb2947244682/mcp-http-request`
+**NPM 仓库地址:** `https://www.npmjs.com/package/@zb2947244682/mcp-http-requester`
 
 ## 项目功能
 
@@ -19,11 +19,11 @@
 ```json
 {
   // ... 其他现有配置 ...
-  "mcp-http-request": {
+  "mcp-http-requester": {
     "command": "npx",
     "args": [
       "-y",
-      "@zb2947244682/mcp-http-request"
+      "@zb2947244682/mcp-http-requester"
     ]
   }
 }
@@ -34,5 +34,5 @@
 您可以通过以下单行命令直接从命令行运行此 MCP 项目：
 
 ```bash
-npx @zb2947244682/mcp-http-request
+npx @zb2947244682/mcp-http-requester
 ```
