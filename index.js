@@ -22,13 +22,30 @@ let requestStats = {
   totalRequests: 0,
   successfulRequests: 0,
   failedRequests: 0,
-  averageResponseTime: 0
+  averageResponseTime: 0,
+  totalResponseTime: 0,
+  minResponseTime: Infinity,
+  maxResponseTime: 0,
+  statusCodeCounts: {},
+  errorCounts: {}
 };
 
-// 超时控制的fetch包装函数
+// 验证URL格式
+function validateUrl(url) {
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// 超时控制的fetch包装函数 - 改进版本
 async function fetchWithTimeout(url, options, timeoutMs = 30000) {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  const timeoutId = setTimeout(() => {
+    controller.abort();
+  }, timeoutMs);
   
   try {
     const response = await fetch(url, {
@@ -46,7 +63,7 @@ async function fetchWithTimeout(url, options, timeoutMs = 30000) {
   }
 }
 
-// 重试机制
+// 重试机制 - 改进版本
 async function fetchWithRetry(url, options, maxRetries = 3, delayMs = 1000) {
   let lastError;
   
@@ -67,23 +84,35 @@ async function fetchWithRetry(url, options, maxRetries = 3, delayMs = 1000) {
   throw new Error(`重试${maxRetries}次后仍然失败: ${lastError.message}`);
 }
 
-// 检测响应内容类型
+// 检测响应内容类型 - 改进版本
 function detectResponseType(responseText, contentType) {
-  if (contentType && contentType.includes('application/json')) {
-    try {
-      JSON.parse(responseText);
-      return 'json';
-    } catch {
+  // 优先使用Content-Type头
+  if (contentType) {
+    if (contentType.includes('application/json')) {
+      try {
+        JSON.parse(responseText);
+        return 'json';
+      } catch {
+        return 'text';
+      }
+    }
+    
+    if (contentType.includes('text/html')) {
+      return 'html';
+    }
+    
+    if (contentType.includes('text/xml') || contentType.includes('application/xml')) {
+      return 'xml';
+    }
+    
+    if (contentType.includes('text/plain')) {
       return 'text';
     }
   }
   
-  if (contentType && contentType.includes('text/html')) {
-    return 'html';
-  }
-  
-  if (contentType && contentType.includes('text/xml')) {
-    return 'xml';
+  // 如果没有Content-Type或无法确定，尝试内容检测
+  if (responseText.trim() === '') {
+    return 'empty';
   }
   
   // 尝试检测JSON
@@ -95,12 +124,23 @@ function detectResponseType(responseText, contentType) {
     if (responseText.trim().startsWith('<') && responseText.includes('>')) {
       return 'html';
     }
+    
+    // 尝试检测XML
+    if (responseText.trim().startsWith('<?xml') || 
+        (responseText.trim().startsWith('<') && responseText.includes('</'))) {
+      return 'xml';
+    }
+    
     return 'text';
   }
 }
 
-// 格式化响应内容
+// 格式化响应内容 - 改进版本
 function formatResponse(responseText, responseType) {
+  if (responseText.trim() === '') {
+    return '[空响应]';
+  }
+  
   switch (responseType) {
     case 'json':
       try {
@@ -109,11 +149,41 @@ function formatResponse(responseText, responseType) {
         return responseText;
       }
     case 'html':
-      // 简化HTML显示，移除多余空白
-      return responseText.replace(/\s+/g, ' ').trim();
+      // 简化HTML显示，移除多余空白，但保留基本结构
+      return responseText
+        .replace(/\s+/g, ' ')
+        .replace(/>\s+</g, '><')
+        .trim();
+    case 'xml':
+      // 简化XML显示
+      return responseText
+        .replace(/\s+/g, ' ')
+        .replace(/>\s+</g, '><')
+        .trim();
+    case 'empty':
+      return '[空响应]';
     default:
       return responseText;
   }
+}
+
+// 更新统计信息
+function updateStats(responseTime, success, statusCode, errorType) {
+  requestStats.totalRequests++;
+  requestStats.totalResponseTime += responseTime;
+  
+  if (success) {
+    requestStats.successfulRequests++;
+    requestStats.statusCodeCounts[statusCode] = (requestStats.statusCodeCounts[statusCode] || 0) + 1;
+  } else {
+    requestStats.failedRequests++;
+    requestStats.errorCounts[errorType] = (requestStats.errorCounts[errorType] || 0) + 1;
+  }
+  
+  // 更新响应时间统计
+  requestStats.minResponseTime = Math.min(requestStats.minResponseTime, responseTime);
+  requestStats.maxResponseTime = Math.max(requestStats.maxResponseTime, responseTime);
+  requestStats.averageResponseTime = requestStats.totalResponseTime / requestStats.totalRequests;
 }
 
 // 注册一个名为 "call_url" 的工具 (HTTP请求工具)
@@ -122,7 +192,7 @@ server.registerTool("call_url",
     title: "HTTP Request Tool",         // 工具在 UI 中显示的标题
     description: "Performs an HTTP request with advanced features like timeout, retry, and response formatting", // 工具的描述
     inputSchema: { 
-      url: z.string(), 
+      url: z.string().url("请输入有效的URL地址"), 
       method: z.string().default("GET"),
       headers: z.record(z.string()).optional(),
       body: z.string().optional(),
@@ -137,11 +207,15 @@ server.registerTool("call_url",
   // 接收解构的参数 { url, method, headers, body, timeout, maxRetries, retryDelay, followRedirects, validateSSL }
   async ({ url, method = "GET", headers = {}, body, timeout = 30000, maxRetries = 3, retryDelay = 1000, followRedirects = true, validateSSL = true }) => {
     const startTime = Date.now();
-    requestStats.totalRequests++;
     
     //console.log(`收到HTTP请求: ${method} ${url}`);
     
     try {
+      // 验证URL格式
+      if (!validateUrl(url)) {
+        throw new Error(`无效的URL格式: ${url}`);
+      }
+      
       // 构建fetch选项
       const fetchOptions = {
         method: method.toUpperCase(),
@@ -182,11 +256,9 @@ server.registerTool("call_url",
       const responseText = await response.text();
       
       const responseTime = Date.now() - startTime;
-      requestStats.successfulRequests++;
       
-      // 更新平均响应时间
-      requestStats.averageResponseTime = 
-        (requestStats.averageResponseTime * (requestStats.successfulRequests - 1) + responseTime) / requestStats.successfulRequests;
+      // 更新统计信息
+      updateStats(responseTime, true, response.status, null);
       
       //console.log(`请求成功: ${response.status} ${response.statusText} (${responseTime}ms)`);
       
@@ -200,15 +272,20 @@ server.registerTool("call_url",
         responseHeaders[key] = value;
       });
       
+      // 判断请求是否真正成功（2xx状态码）
+      const isSuccess = response.status >= 200 && response.status < 300;
+      const statusMessage = isSuccess ? "✅ 成功" : `⚠️ ${response.status} ${response.statusText}`;
+      
       // 返回响应结果
       return {
         content: [
           { 
             type: "text", 
-            text: `HTTP ${response.status} ${response.statusText}
+            text: `HTTP ${response.status} ${response.statusText} ${statusMessage}
 响应时间: ${responseTime}ms
 响应类型: ${responseType}
 响应大小: ${responseText.length} 字符
+重试次数: 0/${maxRetries}
 
 响应头:
 ${JSON.stringify(responseHeaders, null, 2)}
@@ -221,18 +298,32 @@ ${formattedResponse}`
       
     } catch (error) {
       const responseTime = Date.now() - startTime;
-      requestStats.failedRequests++;
+      
+      // 更新统计信息
+      updateStats(responseTime, false, null, error.message);
       
       console.error(`请求失败: ${error.message}`);
+      
+      // 提供更友好的错误信息
+      let errorMessage = error.message;
+      if (error.message.includes('Failed to parse URL')) {
+        errorMessage = `URL格式错误: ${url}`;
+      } else if (error.message.includes('请求超时')) {
+        errorMessage = `请求超时 (${timeout}ms)`;
+      } else if (error.message.includes('fetch')) {
+        errorMessage = `网络请求失败: ${error.message}`;
+      }
       
       return {
         content: [
           { 
             type: "text", 
-            text: `请求失败: ${error.message}
+            text: `❌ 请求失败: ${errorMessage}
 请求时间: ${responseTime}ms
-重试次数: ${maxRetries}
-超时设置: ${timeout}ms` 
+重试次数: ${maxRetries}/${maxRetries}
+超时设置: ${timeout}ms
+请求URL: ${url}
+请求方法: ${method}` 
           }
         ]
       };
@@ -240,24 +331,49 @@ ${formattedResponse}`
   }
 );
 
-// 注册统计信息工具
+// 注册统计信息工具 - 改进版本
 server.registerTool("get_stats",
   {
     title: "HTTP Request Statistics",
-    description: "Get statistics about HTTP requests made by this tool",
+    description: "Get comprehensive statistics about HTTP requests made by this tool",
     inputSchema: {}
   },
   async () => {
+    const successRate = requestStats.totalRequests > 0 ? 
+      ((requestStats.successfulRequests / requestStats.totalRequests) * 100).toFixed(2) : 0;
+    
+    // 格式化状态码统计
+    const statusCodeStats = Object.entries(requestStats.statusCodeCounts)
+      .map(([code, count]) => `${code}: ${count}次`)
+      .join(', ') || '无';
+    
+    // 格式化错误统计
+    const errorStats = Object.entries(requestStats.errorCounts)
+      .map(([error, count]) => `${error}: ${count}次`)
+      .join(', ') || '无';
+    
     return {
       content: [
         {
           type: "text",
-          text: `HTTP请求统计信息:
+          text: `📊 HTTP请求统计信息
+
+📈 基本统计:
 总请求数: ${requestStats.totalRequests}
 成功请求数: ${requestStats.successfulRequests}
 失败请求数: ${requestStats.failedRequests}
-成功率: ${requestStats.totalRequests > 0 ? ((requestStats.successfulRequests / requestStats.totalRequests) * 100).toFixed(2) : 0}%
-平均响应时间: ${requestStats.averageResponseTime.toFixed(2)}ms`
+成功率: ${successRate}%
+
+⏱️ 响应时间:
+平均响应时间: ${requestStats.averageResponseTime.toFixed(2)}ms
+最快响应时间: ${requestStats.minResponseTime === Infinity ? 'N/A' : requestStats.minResponseTime + 'ms'}
+最慢响应时间: ${requestStats.maxResponseTime === 0 ? 'N/A' : requestStats.maxResponseTime + 'ms'}
+
+🔢 状态码分布:
+${statusCodeStats}
+
+❌ 错误类型分布:
+${errorStats}`
         }
       ]
     };
