@@ -1,6 +1,6 @@
 {
   "name": "@zb2947244682/mcp-http-requester",
-  "version": "1.2.7",
+  "version": "1.2.8",
   "description": "用于模拟HTTP请求的MCP工具",
   "homepage": "https://www.npmjs.com/~zb2947244682",
   "repository": {
