@@ -49,7 +49,7 @@
     "command": "npx",
     "args": [
       "-y",
-      "@zb2947244682/mcp-http-requester"
+      "@zb2947244682/mcp-http-requester@latest"
     ]
   }
 }
